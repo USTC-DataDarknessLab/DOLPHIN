@@ -111,10 +111,6 @@ python /DOLPHIN/preprocess/node_memory.py --data dataset_name
 python /DOLPHIN/eid_analyze/eid_analyze_parallel.py 
 ```
 
-Please note that for different models, preprocessing only needs to be performed once under the same sampling configuration. However, different sampling parameters (such as different layer numbers or different fanouts) require re-execution of the preprocessing operation.
-
-## Train
-
 After completing the preprocessing operation, you can run the training program by specifying the dataset name and model configuration file path:
 ```
 python /DOLPHIN/train.py --data dataset_name  --eid_load final --config model_config_file_path
