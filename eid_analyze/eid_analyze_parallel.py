@@ -10,8 +10,7 @@ import json
 from collections import OrderedDict
 import multiprocessing
 
-data = "LASTFM"
-layer=1
+
 def calculate_staleness(eids, datas):
     srcs = datas['src'][eids].tolist()
     dsts = datas['dst'][eids].tolist()
@@ -200,6 +199,17 @@ def process(datas, json_path):
     
     return all_batches_train
 if __name__ == "__main__":
+    import argparse
+    import os
+    import yaml
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data', default='LASTFM')
+    parser.add_argument('--config', default='/DOLPHIN/config/TGN-2.yml')
+    parser.add_argument('--no_single_hop', action='store_true')
+    args = parser.parse_args()
+    with open(args.config) as file:
+        layer = yaml.safe_load(file)['sampling'][0]['layer']
+    data = args.data
     multiprocessing.set_start_method('spawn') 
     
    
@@ -217,7 +227,12 @@ if __name__ == "__main__":
     train_bin_path = f'{base_path}/{layer}/all_batches_train_final.bin'
     
     start = time.time()
+    os.makedirs(os.path.dirname(train_bin_path), exist_ok=True)
     write_batches_to_bin(all_batches_train, train_bin_path)
+    if layer > 1 and not args.no_single_hop:
+        single_path = f'{base_path}/1/all_batches_train_final.bin'
+        os.makedirs(os.path.dirname(single_path), exist_ok=True)
+        write_batches_to_bin(all_batches_train, single_path)
     
     start = time.time()
     train_read = read_batches_from_bin(train_bin_path)

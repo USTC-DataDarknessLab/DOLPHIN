@@ -22,6 +22,7 @@ parser.add_argument('--substream_size', type=int, default=60000, help='substream
 parser.add_argument('--cache_budget', type=int, default=10)
 parser.add_argument('--eval_neg_samples', type=int, default=1, help='how many negative samples to use at inference. Note: this will change the metric of test set to AP+AUC to AP+MRR!')
 parser.add_argument('--opt', action='store_true', default=False)
+parser.add_argument('--no_single_hop', action='store_true', help='only write the configured hop count; by default multi-hop also writes single-hop files')
 args=parser.parse_args()
 
 # os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -85,11 +86,10 @@ if __name__ == '__main__':
             val_edge_end = df_conf['val_edge_end']
     sample_param, memory_param, gnn_param, train_param = parse_config(args.config)
     if (args.fanout != -1):
-        sample_param['neighbor'] = [args.fanout]
+        if args.fanout <= 0:
+            parser.error('--fanout must be positive')
+        sample_param['neighbor'] = [args.fanout] * sample_param['layer']
         
-    if (args.data == 'GDELT' and sample_param['layer'] == 2):
-        sample_param['neighbor'] = [8, 8]
-        train_param['epoch'] = 1
     # gnn_dim_node = 0 if (node_feats.shape[0] == 0) else node_feats.shape[1]
     # gnn_dim_edge = 0 if (edge_feats is None or edge_feats.shape[0] == 0) else edge_feats.shape[1]
     if (args.data == 'LASTFM'):
@@ -230,11 +230,11 @@ if __name__ == '__main__':
         if (not use_async_prefetch):
             feat_buffer.init_feat(node_feats, edge_feats)
         
-        if (args.data == 'MAG1' or args.data == 'MOOC1'):
+        if (args.data in ('MAG1', 'MOOC1') and (args.no_single_hop or sample_param['layer'] == 1)):
             feat_buffer.gen_part_stream_bucket_cache()
         else:
             
-            feat_buffer.gen_part_stream(bucket_optimal=False, cache_budget=args.cache_budget * 1024 ** 3)
+            feat_buffer.gen_part_stream(bucket_optimal=False, cache_budget=args.cache_budget * 1024 ** 3, write_single_hop=not args.no_single_hop)
             
     print_total()
     flush_saveBin_conf()

@@ -110,6 +110,7 @@ python /DOLPHIN/preprocess/disk_preprocess.py --data dataset_name
 python /DOLPHIN/preprocess/node_memory.py --data dataset_name
 python /DOLPHIN/eid_analyze/eid_analyze_parallel.py 
 ```
+Model configurations for the same dataset can reuse the corresponding preprocessing outputs.
 
 After completing the preprocessing operation, you can run the training program by specifying the dataset name and model configuration file path:
 ```
